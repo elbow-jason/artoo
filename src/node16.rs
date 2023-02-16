@@ -1,4 +1,4 @@
-use crate::{Node, Node48};
+use crate::{Node, Node48, Seek};
 
 use std::cmp::Ordering;
 
@@ -38,7 +38,7 @@ impl<V> Node16<V> {
         self.count == 16
     }
 
-    pub fn find_child(&self, key_i: usize, key: &[u8]) -> Option<&Node<V>> {
+    pub fn find_child(&self, seek: &Seek<'_>) -> Option<&Node<V>> {
         // TODO: simd
 
         // if node.type==Node16 // SSE comparison
@@ -50,25 +50,21 @@ impl<V> Node16<V> {
         // return node.child[ctz(bitfield)]
         // else
         // return NULL
-        let byte = key[key_i];
-        match (&self.key[..self.count as usize]).binary_search_by(|probe| probe.cmp(&byte)) {
+
+        match (&self.key[..self.count as usize]).binary_search_by(|probe| probe.cmp(&seek.byte)) {
             Ok(index) => Some(&self.children[index]),
             Err(_) => None,
         }
     }
 
-    pub fn add_child(&mut self, key_i: usize, key: &[u8], child: Node<V>) -> &mut Node<V> {
-        let byte = &key[key_i];
-        match (&self.key[..self.count as usize]).binary_search_by(|probe| probe.cmp(byte)) {
+    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
+        match (&self.key[..self.count as usize]).binary_search_by(|probe| probe.cmp(&seek.byte)) {
             Ok(index) => {
-                panic!(
-                    "Node16::add_child: key byte {} already exists as index {}",
-                    byte, index
-                );
+                panic!("Node16::add_child: child already exists {seek:?}");
             }
             Err(index) => {
                 self.move_items_right_of(index);
-                self.key[index] = *byte;
+                self.key[index] = seek.byte;
                 self.children[index] = child;
                 self.count += 1;
                 &mut self.children[index]

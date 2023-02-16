@@ -1,4 +1,4 @@
-use crate::Node;
+use crate::{Node, Seek};
 
 pub(crate) struct Node256<V> {
     // pub prefix: Vec<u8>,
@@ -27,8 +27,8 @@ impl<V> Node256<V> {
             count: 0,
         }
     }
-    pub fn find_child(&self, key_i: usize, key: &[u8]) -> Option<&Node<V>> {
-        self.children.get(key[key_i] as usize)
+    pub fn find_child(&self, seek: &Seek<'_>) -> Option<&Node<V>> {
+        self.children.get(seek.byte as usize)
     }
 
     pub fn is_full(&self) -> bool {
@@ -36,12 +36,11 @@ impl<V> Node256<V> {
         self.count == 256
     }
 
-    pub fn add_child(&mut self, key_i: usize, key: &[u8], child: Node<V>) -> &mut Node<V> {
-        let byte = key[key_i];
+    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
         debug_assert!(self.count <= 256);
-        debug_assert!(self.children[byte as usize].is_none());
+        debug_assert!(self.children[seek.byte as usize].is_none());
         self.count += 1;
-        let out = &mut self.children[byte as usize];
+        let out = &mut self.children[seek.byte as usize];
         *out = child;
         out
     }

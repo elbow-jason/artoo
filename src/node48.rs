@@ -1,4 +1,4 @@
-use crate::{Node, Node256};
+use crate::{Node, Node256, Seek};
 
 pub(crate) struct Node48<V> {
     // pub prefix: Vec<u8>,
@@ -30,8 +30,8 @@ impl<V> Node48<V> {
             count: 0,
         }
     }
-    pub fn find_child(&self, key_i: usize, key: &[u8]) -> Option<&Node<V>> {
-        match self.children_index[key[key_i] as usize] {
+    pub fn find_child(&self, seek: &Seek<'_>) -> Option<&Node<V>> {
+        match self.children_index[seek.byte as usize] {
             0 => None,
             i => self.children.get((i - 1) as usize),
         }
@@ -52,11 +52,10 @@ impl<V> Node48<V> {
         node256
     }
 
-    pub fn add_child(&mut self, key_i: usize, key: &[u8], child: Node<V>) -> &mut Node<V> {
-        let byte = key[key_i];
+    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
         let i = self.count;
         self.count += 1;
-        self.children_index[byte as usize] = (i + 1) as u8;
+        self.children_index[seek.byte as usize] = (i + 1) as u8;
         self.children[i as usize] = child;
         &mut self.children[i as usize]
     }

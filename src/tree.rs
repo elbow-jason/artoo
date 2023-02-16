@@ -1,4 +1,4 @@
-use crate::{BoxNode, Leaf, Node, Node4};
+use crate::{BoxNode, Leaf, Node, Node4, Seek};
 
 pub struct Tree<V> {
     root: Node<V>,
@@ -15,8 +15,11 @@ impl<V> Tree<V> {
 
     pub fn get(&self, key: &[u8]) -> Option<&V> {
         let mut node: *const Node<V> = &self.root as *const Node<V>;
-        for i in 0..key.len() {
-            match unsafe { &*node }.find_child(i, key) {
+        let mut seek = Seek::new(key);
+        for (i, byte) in key.iter().enumerate() {
+            seek.idx = i;
+            seek.byte = *byte;
+            match unsafe { &*node }.find_child(&seek) {
                 Some(child) => {
                     node = child;
                     continue;
@@ -37,8 +40,11 @@ impl<V> Tree<V> {
 
     pub fn insert(&mut self, key: &[u8], val: V) -> Option<V> {
         let mut node: *mut Node<V> = &mut self.root as *mut Node<V>;
-        for key_i in 0..(key.len() - 1) {
-            match unsafe { &mut *node }.find_child_mut(key_i, key) {
+        let mut seek = Seek::new(key);
+        for (i, byte) in (&key[..key.len() - 1]).iter().enumerate() {
+            seek.idx = i;
+            seek.byte = *byte;
+            match unsafe { &mut *node }.find_child_mut(&seek) {
                 Some(child) => {
                     node = child;
                     continue;
@@ -46,17 +52,18 @@ impl<V> Tree<V> {
                 None => {
                     let new_node4 = Node4::new();
                     let new_node = Node::BoxNode(BoxNode::Node4(Box::new(new_node4)));
-                    node = unsafe { node.as_mut().unwrap() }.add_child(key_i, key, new_node);
+                    node = unsafe { node.as_mut().unwrap() }.add_child(&seek, new_node);
                 }
             }
         }
-        let last_byte = key[key.len() - 1];
         let node = unsafe { &mut *node };
-        match node.find_child_mut(key.len() - 1, key) {
+        seek.idx = key.len() - 1;
+        seek.byte = seek.key[seek.idx];
+        match node.find_child_mut(&seek) {
             Some(child) => child.insert_in_leaf(val),
             None => {
                 let new_node = Node::Leaf(Leaf::new(val));
-                let _ = node.add_child(key.len() - 1, key, new_node);
+                let _ = node.add_child(&seek, new_node);
                 self.count += 1;
                 None
             }
@@ -65,8 +72,11 @@ impl<V> Tree<V> {
 
     fn remove(&mut self, key: &[u8]) -> Option<V> {
         let mut node: *mut Node<V> = &mut self.root as *mut Node<V>;
-        for key_i in 0..key.len() {
-            match unsafe { &mut *node }.find_child_mut(key_i, key) {
+        let mut seek = Seek::new(key);
+        for (i, byte) in key.iter().enumerate() {
+            seek.idx = i;
+            seek.byte = *byte;
+            match unsafe { &mut *node }.find_child_mut(&seek) {
                 Some(child) => {
                     node = child;
                     continue;

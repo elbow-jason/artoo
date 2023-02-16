@@ -1,4 +1,4 @@
-use crate::{Node, Node16};
+use crate::{Node, Node16, Seek};
 
 // TODO: look into simd
 pub(crate) struct Node4<V> {
@@ -36,20 +36,19 @@ impl<V> Node4<V> {
         self.count == 4
     }
 
-    pub fn find_child(&self, key_i: usize, key: &[u8]) -> Option<&Node<V>> {
-        let byte = key[key_i];
-        for i in 0..self.count as usize {
-            if self.key[i] == byte {
+    pub fn find_child(&self, seek: &Seek<'_>) -> Option<&Node<V>> {
+        for (i, byte) in self.key[..self.count as usize].iter().enumerate() {
+            if byte == &seek.byte {
                 return self.children.get(i);
             }
         }
         None
     }
 
-    pub fn add_child(&mut self, key_i: usize, key: &[u8], child: Node<V>) -> &mut Node<V> {
+    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
         debug_assert!(self.is_full() == false);
-        debug_assert!(self.find_child(key_i, key).is_none());
-        self.key[self.count as usize] = key[key_i];
+        debug_assert!(self.find_child(seek).is_none());
+        self.key[self.count as usize] = seek.byte;
         self.children[self.count as usize] = child;
         let child_mut = &mut self.children[self.count as usize];
         self.count += 1;

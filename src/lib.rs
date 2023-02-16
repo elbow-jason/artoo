@@ -1,7 +1,7 @@
 #![feature(portable_simd)]
 
 mod node;
-use node::{BoxNode, Node};
+use node::{BoxNode, Node, Seek};
 
 mod node4;
 use node4::{Node4, Node4IntoIter, Node4Iter};

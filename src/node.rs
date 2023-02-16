@@ -1,5 +1,26 @@
 use crate::{Branch, Leaf, Node16, Node256, Node4, Node48};
 
+/// SeekKey is a fast, efficient whole-key struct that:
+/// 1) keeps track of the index that the key is currently on (for finding the next node)
+/// 2) has the whole key itself
+/// 3) has a cache of the current byte (for speed)
+#[derive(Debug)]
+pub(crate) struct Seek<'a> {
+    pub byte: u8,
+    pub idx: usize,
+    pub key: &'a [u8],
+}
+
+impl<'a> Seek<'a> {
+    pub fn new(key: &'a [u8]) -> Seek {
+        Seek {
+            byte: key[0],
+            idx: 0,
+            key,
+        }
+    }
+}
+
 pub(crate) enum Node<V> {
     None,
     Branch(Box<Branch<V>>),
@@ -26,12 +47,12 @@ where
 }
 
 impl<V> Node<V> {
-    pub fn find_child(&self, key_i: usize, key: &[u8]) -> Option<&Node<V>> {
+    pub fn find_child<'a>(&self, seek: &Seek<'a>) -> Option<&Node<V>> {
         match self {
             Node::None | Node::Leaf(_) => None,
-            Node::BoxNode(bn) => bn.find_child(key_i, key),
-            Node::BoxNodeLeaf(bn, _) => bn.find_child(key_i, key),
-            Node::Branch(_) => unimplemented!(),
+            Node::BoxNode(bn) => bn.find_child(seek),
+            Node::BoxNodeLeaf(bn, _) => bn.find_child(seek),
+            Node::Branch(_) => unreachable!(),
         }
     }
 
@@ -60,7 +81,7 @@ impl<V> Node<V> {
                 None
             }
             Node::BoxNodeLeaf(_, leaf) => Some(leaf.insert(val)),
-            Node::Branch(_) => unimplemented!(),
+            Node::Branch(_) => unreachable!(),
         }
     }
 
@@ -75,8 +96,8 @@ impl<V> Node<V> {
     //     }
     // }
 
-    pub fn find_child_mut(&mut self, key_i: usize, key: &[u8]) -> Option<&mut Node<V>> {
-        unsafe { std::mem::transmute(self.find_child(key_i, key)) }
+    pub fn find_child_mut<'a>(&mut self, seek: &Seek<'a>) -> Option<&mut Node<V>> {
+        unsafe { std::mem::transmute(self.find_child(seek)) }
     }
 
     pub fn is_none(&self) -> bool {
@@ -87,17 +108,17 @@ impl<V> Node<V> {
         }
     }
 
-    pub fn is_leaf(&self) -> bool {
-        todo!()
-    }
+    // pub fn is_leaf(&self) -> bool {
+    //     todo!()
+    // }
 
-    pub fn is_full(&self) -> bool {
-        match self {
-            Node::None | Node::Leaf(_) | Node::Branch(_) => true,
-            Node::BoxNode(bn) => bn.is_full(),
-            Node::BoxNodeLeaf(bn, _) => bn.is_full(),
-        }
-    }
+    // pub fn is_full(&self) -> bool {
+    //     match self {
+    //         Node::None | Node::Leaf(_) | Node::Branch(_) => true,
+    //         Node::BoxNode(bn) => bn.is_full(),
+    //         Node::BoxNodeLeaf(bn, _) => bn.is_full(),
+    //     }
+    // }
 
     // pub fn load_key(&self) -> &[u8] {
     //     todo!()
@@ -135,7 +156,7 @@ impl<V> Node<V> {
             Node::BoxNode(bn) => bn.grow_if_full(),
             Node::BoxNodeLeaf(bn, _leaf) => bn.grow_if_full(),
             Node::Branch(_) => {
-                unimplemented!()
+                unreachable!()
             }
         }
     }
@@ -144,15 +165,15 @@ impl<V> Node<V> {
         todo!()
     }
 
-    pub fn add_child(&mut self, key_i: usize, key: &[u8], child: Node<V>) -> &mut Node<V> {
+    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
         self.grow_if_full();
         match self {
             Node::None | Node::Leaf(_) => {
                 // both None and Leaf are not possible after grow_if_full().
                 unreachable!()
             }
-            Node::BoxNode(bn) => bn.add_child(key_i, key, child),
-            Node::BoxNodeLeaf(bn, _) => bn.add_child(key_i, key, child),
+            Node::BoxNode(bn) => bn.add_child(seek, child),
+            Node::BoxNodeLeaf(bn, _) => bn.add_child(seek, child),
             _ => unreachable!(),
         }
     }
@@ -210,12 +231,12 @@ where
 }
 
 impl<V> BoxNode<V> {
-    pub fn find_child(&self, key_i: usize, key: &[u8]) -> Option<&Node<V>> {
+    pub fn find_child(&self, seek: &Seek<'_>) -> Option<&Node<V>> {
         match self {
-            BoxNode::Node4(node4) => node4.find_child(key_i, key),
-            BoxNode::Node16(node16) => node16.find_child(key_i, key),
-            BoxNode::Node48(node48) => node48.find_child(key_i, key),
-            BoxNode::Node256(node256) => node256.find_child(key_i, key),
+            BoxNode::Node4(node4) => node4.find_child(seek),
+            BoxNode::Node16(node16) => node16.find_child(seek),
+            BoxNode::Node48(node48) => node48.find_child(seek),
+            BoxNode::Node256(node256) => node256.find_child(seek),
             _ => unreachable!(),
         }
     }
@@ -237,12 +258,12 @@ impl<V> BoxNode<V> {
         }
     }
 
-    pub fn add_child(&mut self, key_i: usize, key: &[u8], child: Node<V>) -> &mut Node<V> {
+    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
         match self {
-            BoxNode::Node4(n) => n.add_child(key_i, key, child),
-            BoxNode::Node16(n) => n.add_child(key_i, key, child),
-            BoxNode::Node48(n) => n.add_child(key_i, key, child),
-            BoxNode::Node256(n) => n.add_child(key_i, key, child),
+            BoxNode::Node4(n) => n.add_child(seek, child),
+            BoxNode::Node16(n) => n.add_child(seek, child),
+            BoxNode::Node48(n) => n.add_child(seek, child),
+            BoxNode::Node256(n) => n.add_child(seek, child),
             _ => unreachable!(),
         }
     }
