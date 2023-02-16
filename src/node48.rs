@@ -30,7 +30,7 @@ impl<V> Node48<V> {
             count: 0,
         }
     }
-    pub fn find_child(&self, seek: &Seek<'_>) -> Option<&Node<V>> {
+    pub fn find_child(&self, seek: Seek<'_>) -> Option<&Node<V>> {
         match self.children_index[seek.byte as usize] {
             0 => None,
             i => self.children.get((i - 1) as usize),
@@ -52,7 +52,7 @@ impl<V> Node48<V> {
         node256
     }
 
-    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
+    pub fn add_child(&mut self, seek: Seek<'_>, child: Node<V>) -> &mut Node<V> {
         let i = self.count;
         self.count += 1;
         self.children_index[seek.byte as usize] = (i + 1) as u8;

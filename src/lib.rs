@@ -28,15 +28,7 @@ pub use key::Key;
 // use branch::Branch;
 
 mod tree;
-pub use tree::Tree;
+use tree::Tree;
 
-#[cfg(test)]
-mod tests {
-    // use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
-}
+mod art;
+pub use art::Art;

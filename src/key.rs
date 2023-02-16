@@ -197,11 +197,11 @@ macro_rules! from_array_for_key {
             }
         }
 
-        impl From<&&[u8; $sz]> for Key {
-            fn from(v: &&[u8; $sz]) -> Key {
-                Key::from(&v[..])
-            }
-        }
+        // impl From<&&[u8; $sz]> for Key {
+        //     fn from(v: &&[u8; $sz]) -> Key {
+        //         Key::from(&v[..])
+        //     }
+        // }
     };
 }
 
@@ -242,6 +242,38 @@ from_array_for_key!(32);
 #[test]
 fn test_key_sizeof_is_24() {
     assert_eq!(std::mem::size_of::<Key>(), 24);
+}
+
+const SIZE_OF_PTR: usize = std::mem::size_of::<usize>();
+
+impl From<Key> for usize {
+    fn from(k: Key) -> usize {
+        debug_assert!(k.len() == SIZE_OF_PTR);
+        let mut bytes = [0u8; SIZE_OF_PTR];
+        bytes.copy_from_slice(k.as_slice());
+        usize::from_be_bytes(bytes)
+    }
+}
+
+impl From<&Key> for usize {
+    fn from(k: &Key) -> usize {
+        debug_assert!(k.len() == SIZE_OF_PTR);
+        let mut bytes = [0u8; SIZE_OF_PTR];
+        bytes.copy_from_slice(k.as_slice());
+        usize::from_be_bytes(bytes)
+    }
+}
+
+impl From<usize> for Key {
+    fn from(n: usize) -> Key {
+        Key::new_small(&n.to_be_bytes()[..])
+    }
+}
+
+impl From<&usize> for Key {
+    fn from(n: &usize) -> Key {
+        Key::new_small(&n.to_be_bytes()[..])
+    }
 }
 
 // #[test]

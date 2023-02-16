@@ -27,7 +27,7 @@ impl<V> Node256<V> {
             count: 0,
         }
     }
-    pub fn find_child(&self, seek: &Seek<'_>) -> Option<&Node<V>> {
+    pub fn find_child(&self, seek: Seek<'_>) -> Option<&Node<V>> {
         self.children.get(seek.byte as usize)
     }
 
@@ -36,7 +36,7 @@ impl<V> Node256<V> {
         self.count == 256
     }
 
-    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
+    pub fn add_child(&mut self, seek: Seek<'_>, child: Node<V>) -> &mut Node<V> {
         debug_assert!(self.count <= 256);
         debug_assert!(self.children[seek.byte as usize].is_none());
         self.count += 1;

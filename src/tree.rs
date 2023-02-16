@@ -19,7 +19,7 @@ impl<V> Tree<V> {
         for (i, byte) in key.iter().enumerate() {
             seek.idx = i;
             seek.byte = *byte;
-            match unsafe { &*node }.find_child(&seek) {
+            match unsafe { &*node }.find_child(seek) {
                 Some(child) => {
                     node = child;
                     continue;
@@ -44,7 +44,7 @@ impl<V> Tree<V> {
         for (i, byte) in (&key[..key.len() - 1]).iter().enumerate() {
             seek.idx = i;
             seek.byte = *byte;
-            match unsafe { &mut *node }.find_child_mut(&seek) {
+            match unsafe { &mut *node }.find_child_mut(seek) {
                 Some(child) => {
                     node = child;
                     continue;
@@ -52,18 +52,18 @@ impl<V> Tree<V> {
                 None => {
                     let new_node4 = Node4::new();
                     let new_node = Node::BoxNode(BoxNode::Node4(Box::new(new_node4)));
-                    node = unsafe { node.as_mut().unwrap() }.add_child(&seek, new_node);
+                    node = unsafe { node.as_mut().unwrap() }.add_child(seek, new_node);
                 }
             }
         }
         let node = unsafe { &mut *node };
         seek.idx = key.len() - 1;
         seek.byte = seek.key[seek.idx];
-        match node.find_child_mut(&seek) {
+        match node.find_child_mut(seek) {
             Some(child) => child.insert_in_leaf(val),
             None => {
                 let new_node = Node::Leaf(Leaf::new(val));
-                let _ = node.add_child(&seek, new_node);
+                let _ = node.add_child(seek, new_node);
                 self.count += 1;
                 None
             }
@@ -76,7 +76,7 @@ impl<V> Tree<V> {
         for (i, byte) in key.iter().enumerate() {
             seek.idx = i;
             seek.byte = *byte;
-            match unsafe { &mut *node }.find_child_mut(&seek) {
+            match unsafe { &mut *node }.find_child_mut(seek) {
                 Some(child) => {
                     node = child;
                     continue;

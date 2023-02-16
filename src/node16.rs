@@ -38,7 +38,7 @@ impl<V> Node16<V> {
         self.count == 16
     }
 
-    pub fn find_child(&self, seek: &Seek<'_>) -> Option<&Node<V>> {
+    pub fn find_child(&self, seek: Seek<'_>) -> Option<&Node<V>> {
         // TODO: simd
 
         // if node.type==Node16 // SSE comparison
@@ -57,7 +57,7 @@ impl<V> Node16<V> {
         }
     }
 
-    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
+    pub fn add_child(&mut self, seek: Seek<'_>, child: Node<V>) -> &mut Node<V> {
         match (&self.key[..self.count as usize]).binary_search_by(|probe| probe.cmp(&seek.byte)) {
             Ok(index) => {
                 panic!("Node16::add_child: child already exists {seek:?}");

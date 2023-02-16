@@ -1,15 +1,13 @@
-use artoo::Tree as Art;
+use artoo::Art;
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use skiplist::SkipMap;
 use std::collections::BTreeMap as BTree;
 use std::collections::HashMap;
 
-fn art_new(n: usize) -> Art<usize> {
-    let mut tree = Art::<usize>::new();
+fn art_new(n: usize) -> Art<usize, usize> {
+    let mut tree = Art::<usize, usize>::new();
     for i in 0..n {
-        let arr = i.to_be_bytes();
-        let key = &arr[..];
-        let _ins = tree.insert(key, i);
+        let _ins = tree.insert(i, i);
         // assert_eq!(ins, None);
         // assert_eq!(tree.get(key), Some(&i));
     }
@@ -69,7 +67,7 @@ fn bench_insert_100k(c: &mut Criterion) {
         let mut art = art_new(start_n);
         let mut i: usize = start_n;
         b.iter(|| {
-            art.insert(&i.to_be_bytes()[..], i);
+            art.insert(i, i);
             i += 1;
         });
     });
@@ -110,7 +108,7 @@ fn bench_get_100k(c: &mut Criterion) {
         let art = art_new(n);
         let mut i: usize = 0;
         b.iter(|| {
-            art.get(&i.to_be_bytes());
+            art.get(&i);
             i += 1;
         });
     });

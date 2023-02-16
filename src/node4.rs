@@ -36,7 +36,7 @@ impl<V> Node4<V> {
         self.count == 4
     }
 
-    pub fn find_child(&self, seek: &Seek<'_>) -> Option<&Node<V>> {
+    pub fn find_child(&self, seek: Seek<'_>) -> Option<&Node<V>> {
         for (i, byte) in self.key[..self.count as usize].iter().enumerate() {
             if byte == &seek.byte {
                 return self.children.get(i);
@@ -45,7 +45,7 @@ impl<V> Node4<V> {
         None
     }
 
-    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
+    pub fn add_child(&mut self, seek: Seek<'_>, child: Node<V>) -> &mut Node<V> {
         debug_assert!(self.is_full() == false);
         debug_assert!(self.find_child(seek).is_none());
         self.key[self.count as usize] = seek.byte;

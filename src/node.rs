@@ -4,7 +4,7 @@ use crate::{Branch, Leaf, Node16, Node256, Node4, Node48};
 /// 1) keeps track of the index that the key is currently on (for finding the next node)
 /// 2) has the whole key itself
 /// 3) has a cache of the current byte (for speed)
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct Seek<'a> {
     pub byte: u8,
     pub idx: usize,
@@ -47,7 +47,7 @@ where
 }
 
 impl<V> Node<V> {
-    pub fn find_child<'a>(&self, seek: &Seek<'a>) -> Option<&Node<V>> {
+    pub fn find_child<'a>(&self, seek: Seek<'a>) -> Option<&Node<V>> {
         match self {
             Node::None | Node::Leaf(_) => None,
             Node::BoxNode(bn) => bn.find_child(seek),
@@ -96,7 +96,7 @@ impl<V> Node<V> {
     //     }
     // }
 
-    pub fn find_child_mut<'a>(&mut self, seek: &Seek<'a>) -> Option<&mut Node<V>> {
+    pub fn find_child_mut<'a>(&mut self, seek: Seek<'a>) -> Option<&mut Node<V>> {
         unsafe { std::mem::transmute(self.find_child(seek)) }
     }
 
@@ -165,7 +165,7 @@ impl<V> Node<V> {
         todo!()
     }
 
-    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
+    pub fn add_child(&mut self, seek: Seek<'_>, child: Node<V>) -> &mut Node<V> {
         self.grow_if_full();
         match self {
             Node::None | Node::Leaf(_) => {
@@ -231,7 +231,7 @@ where
 }
 
 impl<V> BoxNode<V> {
-    pub fn find_child(&self, seek: &Seek<'_>) -> Option<&Node<V>> {
+    pub fn find_child(&self, seek: Seek<'_>) -> Option<&Node<V>> {
         match self {
             BoxNode::Node4(node4) => node4.find_child(seek),
             BoxNode::Node16(node16) => node16.find_child(seek),
@@ -258,7 +258,7 @@ impl<V> BoxNode<V> {
         }
     }
 
-    pub fn add_child(&mut self, seek: &Seek<'_>, child: Node<V>) -> &mut Node<V> {
+    pub fn add_child(&mut self, seek: Seek<'_>, child: Node<V>) -> &mut Node<V> {
         match self {
             BoxNode::Node4(n) => n.add_child(seek, child),
             BoxNode::Node16(n) => n.add_child(seek, child),
