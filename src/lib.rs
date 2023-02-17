@@ -28,7 +28,7 @@ pub use key::Key;
 // use branch::Branch;
 
 mod tree;
-use tree::Tree;
+pub use tree::Tree;
 
-mod art;
-pub use art::Art;
+// mod art;
+// pub use art::Art;
