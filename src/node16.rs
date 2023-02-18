@@ -1,6 +1,5 @@
 use crate::describe::{Describe, Describer};
-use crate::{Node, Node48, Seek};
-use std::cmp::Ordering;
+use crate::{util, Node, Node48, Seek};
 
 pub(crate) struct Node16<V> {
     // pub prefix: Vec<u8>,
@@ -25,7 +24,14 @@ where
 
 impl<V> Describer for Node16<V> {
     fn describe(&self, d: &mut Describe) {
-        d.push_str("Node16")
+        d.push_str("Node16\n");
+        d.nest(|d| {
+            for (byte, child) in self.iter() {
+                d.indent();
+                d.push_str(&format!("{:?} => ", byte));
+                child.describe(d);
+            }
+        })
     }
 }
 
@@ -65,7 +71,7 @@ impl<V> Node16<V> {
 
     pub fn add_child(&mut self, seek: Seek<'_>, child: Node<V>) -> &mut Node<V> {
         match (&self.key[..self.count as usize]).binary_search_by(|probe| probe.cmp(&seek.byte)) {
-            Ok(index) => {
+            Ok(_) => {
                 panic!("Node16::add_child: child already exists {seek:?}");
             }
             Err(index) => {
@@ -81,8 +87,8 @@ impl<V> Node16<V> {
     fn move_items_right_of(&mut self, index: usize) {
         // .rev() - start at the rightmost i and move leftward
         for i in (index..self.count as usize).rev() {
-            swap_unchecked(&mut self.key, i, i + 1);
-            swap_unchecked(&mut self.children, i, i + 1);
+            util::swap_unchecked(&mut self.key, i, i + 1);
+            util::swap_unchecked(&mut self.children, i, i + 1);
         }
     }
 
@@ -97,28 +103,10 @@ impl<V> Node16<V> {
         }
         node48
     }
-}
 
-#[inline(always)]
-fn swap<T>(x: &mut [T], i: usize, j: usize) {
-    let (lo, hi) = match i.cmp(&j) {
-        // no swapping necessary
-        Ordering::Equal => return,
-
-        // get the smallest and largest of the two indices
-        Ordering::Less => (i, j),
-        Ordering::Greater => (j, i),
-    };
-    if x.len() <= hi {
-        return;
+    fn iter(&self) -> Node16Iter<V> {
+        Node16Iter::new(self)
     }
-    swap_unchecked(x, lo, hi)
-}
-
-#[inline(always)]
-fn swap_unchecked<T>(x: &mut [T], lo: usize, hi: usize) {
-    let (init, tail) = x.split_at_mut(hi);
-    std::mem::swap(&mut init[lo], &mut tail[0]);
 }
 
 pub(crate) struct Node16IntoIter<V> {
@@ -128,4 +116,24 @@ pub(crate) struct Node16IntoIter<V> {
 pub(crate) struct Node16Iter<'a, V> {
     node16: &'a Node16<V>,
     index: usize,
+}
+
+impl<'a, V> Node16Iter<'a, V> {
+    pub(crate) fn new(node16: &'a Node16<V>) -> Self {
+        Self { node16, index: 0 }
+    }
+}
+
+impl<'a, V> Iterator for Node16Iter<'a, V> {
+    type Item = (u8, &'a Node<V>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index == self.node16.count as usize {
+            return None;
+        }
+        let idx = self.node16.key[self.index];
+        let child = &self.node16.children[self.index];
+        self.index += 1;
+        Some((idx, child))
+    }
 }

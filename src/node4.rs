@@ -25,7 +25,15 @@ where
 
 impl<V> Describer for Node4<V> {
     fn describe(&self, d: &mut Describe) {
-        d.push_str("Node4")
+        d.push_str("Node4\n");
+        d.nest(|d| {
+            for (byte, child) in self.iter() {
+                d.indent();
+                d.push_str(&format!("{:?} => ", byte));
+                d.eat_next_indent();
+                child.describe(d);
+            }
+        })
     }
 }
 
@@ -126,7 +134,7 @@ impl<'a, V> Iterator for Node4Iter<'a, V> {
     type Item = (u8, &'a Node<V>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index == self.node4.count as usize {
+        if self.index >= self.node4.count as usize {
             return None;
         }
         let idx = self.node4.key[self.index];

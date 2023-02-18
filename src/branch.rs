@@ -21,12 +21,10 @@ where
 
 impl<V> Describer for Branch<V> {
     fn describe(&self, d: &mut Describe) {
-        d.push_str("Branch {");
+        d.push_str(&format!("Branch(seq: {:?})\n", self.sequence()));
         d.nest(|d| {
-            d.push_str(&format!("seq: {:?},", self.sequence()));
             self.node.describe(d);
         });
-        d.push_str("}");
     }
 }
 

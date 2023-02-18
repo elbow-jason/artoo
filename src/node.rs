@@ -48,21 +48,25 @@ where
 }
 
 impl<V> Describer for Node<V> {
-    fn describe(&self, mut d: &mut Describe) {
+    fn describe(&self, d: &mut Describe) {
         match self {
-            Node::None => d.push_str("Node::None"),
-            Node::Leaf(_) => d.push_str("Node::Leaf"),
+            Node::None => d.push_str("Node::None\n"),
+            Node::Leaf(leaf) => {
+                d.push_str("Node::Leaf => ");
+                leaf.describe(d);
+            }
             Node::BoxNode(box_node) => {
-                d.push_str("Node::BoxNode =>");
-                // d.nest(|d| box_node.describe(d));
+                d.indent();
+                d.push_str("Node::BoxNode => ");
+                box_node.describe(d);
             }
             Node::BoxNodeLeaf(box_node, _) => {
                 d.push_str("Node::BoxNodeLeaf => ");
-                // d.nest(|d| box_node.describe(d));
+                box_node.describe(d);
             }
             Node::Branch(branch) => {
-                d.push_str("Node::Branch => ");
-                // d.nest(|d| branch.as_ref().describe(d));
+                d.push_str("Node::Branch =>");
+                branch.as_ref().describe(d);
             }
         }
     }
@@ -253,24 +257,24 @@ where
 }
 
 impl<V> Describer for BoxNode<V> {
-    fn describe(&self, mut d: &mut Describe) {
+    fn describe(&self, d: &mut Describe) {
         match self {
-            BoxNode::None => d.push_str("BoxNode::None"),
+            BoxNode::None => d.push_str("BoxNode::None\n"),
             BoxNode::Node4(n) => {
-                d.push_str("BoxNode::Node4 =>\n");
-                d.nest(|d| n.describe(d));
+                d.push_str("BoxNode::Node4 => ");
+                n.describe(d);
             }
             BoxNode::Node16(n) => {
-                d.push_str("BoxNode::Node16 =>\n");
-                d.nest(|d| n.describe(d));
+                d.push_str("BoxNode::Node16 => ");
+                n.describe(d);
             }
             BoxNode::Node48(n) => {
-                d.push_str("BoxNode::Node48 =>\n");
-                d.nest(|d| n.describe(d));
+                d.push_str("BoxNode::Node48 => ");
+                n.describe(d);
             }
             BoxNode::Node256(n) => {
-                d.push_str("BoxNode::Node256 =>\n");
-                d.nest(|d| n.describe(d));
+                d.push_str("BoxNode::Node256 => ");
+                n.describe(d);
             }
         }
     }

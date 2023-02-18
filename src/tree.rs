@@ -8,10 +8,10 @@ pub struct Tree<V> {
 
 impl<V> Describer for Tree<V> {
     fn describe(&self, d: &mut Describe) {
-        let t = format!("Tree(size: {:?}) => {{", self.count);
+        let t = format!("Tree(size: {:?})\n", self.count);
         d.push_str(&t);
         d.nest(|d| self.root.describe(d));
-        d.push_str("}")
+        d.push_str("\n")
     }
 }
 
@@ -125,29 +125,40 @@ fn test_tree_insert() {
     let mut tree = Tree::<i32>::new();
     let ins1 = tree.insert(b"a", 1);
     assert_eq!(ins1, None);
-    match tree.root {
-        Node::BoxNode(bn) => match bn {
-            BoxNode::Node4(n4) => {
-                // 97 is 'a'
-                assert_eq!(n4.count, 1);
-                assert_eq!(n4.key, [97, 0, 0, 0]);
-                assert!(n4.children[0].is_none() == false);
-                assert!(n4.children[1].is_none() == true);
-                assert!(n4.children[2].is_none() == true);
-                assert!(n4.children[3].is_none() == true);
+    {
+        match &tree.root {
+            Node::BoxNode(bn) => match bn {
+                BoxNode::Node4(n4) => {
+                    // 97 is 'a'
+                    assert_eq!(n4.count, 1);
+                    assert_eq!(n4.key, [97, 0, 0, 0]);
+                    assert!(n4.children[0].is_none() == false);
+                    assert!(n4.children[1].is_none() == true);
+                    assert!(n4.children[2].is_none() == true);
+                    assert!(n4.children[3].is_none() == true);
 
-                let node: &Node<i32> = &n4.children[0];
-                match node {
-                    Node::Leaf(leaf) => {
-                        assert_eq!(leaf.val, 1);
+                    let node: &Node<i32> = &n4.children[0];
+                    match node {
+                        Node::Leaf(leaf) => {
+                            assert_eq!(leaf.val, 1);
+                        }
+                        _ => panic!("expected Node::Leaf got: {:?}", node),
                     }
-                    _ => panic!("expected Node::Leaf got: {:?}", node),
                 }
-            }
-            got => panic!("BoxNode was not a Node4 - got: {:?}", got),
-        },
-        got => panic!("tree.root was not a BoxNode - got: {:?}", got),
+                got => panic!("BoxNode was not a Node4 - got: {:?}", got),
+            },
+            got => panic!("tree.root was not a BoxNode - got: {:?}", got),
+        }
     }
+    let mut desc = Describe::new();
+    tree.describe(&mut desc);
+    desc.assert_eq(
+        "
+Tree(size: 1)
+  Node::BoxNode => BoxNode::Node4 => Node4
+    97 => Node::Leaf => Leaf(val: :no_debug:)
+        ",
+    )
 }
 
 #[test]

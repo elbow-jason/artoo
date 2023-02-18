@@ -1,5 +1,13 @@
+use crate::describe::{Describe, Describer};
+
 pub(crate) struct Leaf<V> {
     pub val: V,
+}
+
+impl<V> Describer for Leaf<V> {
+    fn describe(&self, d: &mut Describe) {
+        d.push_str("Leaf(val: :no_debug:)\n");
+    }
 }
 
 impl<V> std::fmt::Debug for Leaf<V>
@@ -10,6 +18,15 @@ where
         write!(f, "Leaf(val: {:?})", self.val)
     }
 }
+
+// impl<V> Describer for Leaf<V>
+// where
+//     V: std::fmt::Debug,
+// {
+//     fn describe(&self, d: &mut Describe) {
+//         d.push_str(&format!("Leaf({:?})", &self.val));
+//     }
+// }
 
 impl<V> Leaf<V> {
     pub fn new(val: V) -> Self {
