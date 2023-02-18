@@ -1,8 +1,18 @@
+use crate::describe::{Describe, Describer};
 use crate::{BoxNode, Leaf, Node, Node4, Seek};
 
 pub struct Tree<V> {
     root: Node<V>,
     count: usize,
+}
+
+impl<V> Describer for Tree<V> {
+    fn describe(&self, d: &mut Describe) {
+        let t = format!("Tree(size: {:?}) => {{", self.count);
+        d.push_str(&t);
+        d.nest(|d| self.root.describe(d));
+        d.push_str("}")
+    }
 }
 
 impl<V> Tree<V> {
