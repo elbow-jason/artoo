@@ -252,6 +252,30 @@ where
     }
 }
 
+impl<V> Describer for BoxNode<V> {
+    fn describe(&self, mut d: &mut Describe) {
+        match self {
+            BoxNode::None => d.push_str("BoxNode::None"),
+            BoxNode::Node4(n) => {
+                d.push_str("BoxNode::Node4 =>\n");
+                d.nest(|d| n.describe(d));
+            }
+            BoxNode::Node16(n) => {
+                d.push_str("BoxNode::Node16 =>\n");
+                d.nest(|d| n.describe(d));
+            }
+            BoxNode::Node48(n) => {
+                d.push_str("BoxNode::Node48 =>\n");
+                d.nest(|d| n.describe(d));
+            }
+            BoxNode::Node256(n) => {
+                d.push_str("BoxNode::Node256 =>\n");
+                d.nest(|d| n.describe(d));
+            }
+        }
+    }
+}
+
 impl<V> BoxNode<V> {
     pub fn find_child(&self, seek: Seek<'_>) -> Option<&Node<V>> {
         match self {
