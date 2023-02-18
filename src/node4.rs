@@ -1,3 +1,4 @@
+use crate::describe::{Describe, Describer};
 use crate::{Node, Node16, Seek};
 
 // TODO: look into simd
@@ -19,6 +20,12 @@ where
             .field("children", &self.children)
             .field("count", &self.count)
             .finish()
+    }
+}
+
+impl<V> Describer for Node4<V> {
+    fn describe(&self, d: &mut Describe) {
+        d.push_str("Node4")
     }
 }
 

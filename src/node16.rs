@@ -1,5 +1,5 @@
+use crate::describe::{Describe, Describer};
 use crate::{Node, Node48, Seek};
-
 use std::cmp::Ordering;
 
 pub(crate) struct Node16<V> {
@@ -20,6 +20,12 @@ where
             .field("children", &self.children)
             .field("count", &self.count)
             .finish()
+    }
+}
+
+impl<V> Describer for Node16<V> {
+    fn describe(&self, d: &mut Describe) {
+        d.push_str("Node16")
     }
 }
 

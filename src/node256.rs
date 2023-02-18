@@ -1,3 +1,4 @@
+use crate::describe::{Describe, Describer};
 use crate::{Node, Seek};
 
 pub(crate) struct Node256<V> {
@@ -16,6 +17,12 @@ where
             .field("children", &self.children)
             .field("count", &self.count)
             .finish()
+    }
+}
+
+impl<V> Describer for Node256<V> {
+    fn describe(&self, d: &mut Describe) {
+        d.push_str("Node256")
     }
 }
 
