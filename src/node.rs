@@ -1,3 +1,4 @@
+use crate::describe::{Describe, Describer};
 use crate::{Branch, Leaf, Node16, Node256, Node4, Node48};
 
 /// SeekKey is a fast, efficient whole-key struct that:
@@ -42,6 +43,27 @@ where
                 write!(f, "Node::BoxNodeLeaf({:?}, {:?})", box_node, leaf)
             }
             Node::Branch(branch) => write!(f, "Node::Branch({:?})", branch),
+        }
+    }
+}
+
+impl<V> Describer for Node<V> {
+    fn describe(&self, mut d: &mut Describe) {
+        match self {
+            Node::None => d.push_str("Node::None"),
+            Node::Leaf(_) => d.push_str("Node::Leaf"),
+            Node::BoxNode(box_node) => {
+                d.push_str("Node::BoxNode =>");
+                // d.nest(|d| box_node.describe(d));
+            }
+            Node::BoxNodeLeaf(box_node, _) => {
+                d.push_str("Node::BoxNodeLeaf => ");
+                // d.nest(|d| box_node.describe(d));
+            }
+            Node::Branch(branch) => {
+                d.push_str("Node::Branch => ");
+                // d.nest(|d| branch.as_ref().describe(d));
+            }
         }
     }
 }

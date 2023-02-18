@@ -24,6 +24,8 @@ use branch::Branch;
 mod key;
 pub use key::Key;
 
+pub mod describe;
+
 // mod branch;
 // use branch::Branch;
 
